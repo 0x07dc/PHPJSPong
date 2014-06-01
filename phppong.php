@@ -153,21 +153,34 @@ function runLogViewer(){
 						'left':pageNameLeft+'px'
 					},2000,
 					function(){
+						for(var i = 0; i < ipsListed.length; i++){
+							console.log("thisIp: "+ipsListed[i][3]+" circleIp: "+$(this).attr('class').split(" ")[2].substring(2));
+							if($(this).attr('class').split(" ")[2].substring(2)==ipsListed[i][3]){
+								ipAddTop = ($('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).offset().top - $(window).scrollTop())+5;
+								ipAddLeft = ($('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).offset().left);
+								console.log("ipAddTop: "+ipAddTop);
+								break;
+							}
+						}
+						console.log("ipAddLeft: "+ipAddLeft);
 						$(this).animate({/*
 							'left':($('.ipAdd.'+$(this).attr('class').split(" ")[2]+'#'+$(this).attr('id')).offset().left),// Can modify this to make it more pong-like (bounce at inverted angle)
 							'top':($('.ipAdd.'+$(this).attr('class').split(" ")[2]+'#'+$(this).attr('id')).offset().top - $(window).scrollTop())+5*/
-							'left':($('.ipAdd.'+$(this).attr('class').split(" ")[2])),// Can modify this to make it more pong-like (bounce at inverted angle)
-							'top':($('.ipAdd.'+$(this).attr('class').split(" ")[2]) - $(window).scrollTop())+5
+
+							'left':ipAddLeft,// Can modify this to make it more pong-like (bounce at inverted angle)
+							'top':ipAddTop
 						},2000,function(){
 							for(var i = 0; i < ipsListed.length; i++){
-								if($(this).attr('class').split(" ")[2]==ipsListed[i][2]){
-									
+								if($(this).attr('class').split(" ")[2].substring(2)==ipsListed[i][3]){/*
+									ipAddTop = ($('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).offset().top - $(window).scrollTop());
+									ipAddLeft = ($('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).offset().left);*/
+									$('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).fadeOut(700,function(){$(this).remove();});
+									ipsListed.splice(i,1);
 									break;
 								}
-
 							}
 							$(this).fadeOut(700,function(){$(this).remove();});
-							$('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')).fadeOut(700,function(){$(this).remove();});
+							
 							// Adjust all dots
 							/*
 							console.log($(".circle"));
