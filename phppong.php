@@ -1,10 +1,17 @@
 <?php
 
 require('php.php');
+
+if($_REQUEST['p']!="password") exit();
+
+
+
+
+
 $logArr = runLogViewer();
 //print_r($logArr);
 
-$startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-(1*60);//(.25*24*60*60);
+$startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-(12);//(.25*24*60*60);
 $endTime = isset($_REQUEST['endTime'])?$_REQUEST['endTime']:time();
 $jsLog = json_encode($logArr);
 
@@ -59,14 +66,12 @@ $jsLog = json_encode($logArr);
 	</table>
 
 <script>
-inputLog = JSON.parse('<?php echo $jsLog ?>');
-var numOfPings = 0;
+window.inputLog = JSON.parse('<?php echo $jsLog ?>');
+window.inputLogStartInd = -1;
+window.thisSecond = '<?php echo $startTime ?>';
+window.endTime = '<?php echo $endTime ?>';
 
 
-
-var inputLogStartInd = -1;
-var thisSecond = '<?php echo $startTime ?>';
-var endTime = '<?php echo $endTime ?>';
 for(var i = 0; i < inputLog.length; i++){
 	if(inputLog[i].time >= thisSecond){
 		inputLogStartInd = i;
@@ -76,9 +81,9 @@ for(var i = 0; i < inputLog.length; i++){
 }
 if(inputLogStartInd!=-1){
 
-	var thisLogInd = inputLogStartInd;
-	var pagesListed = new Array();
-	var ipsListed = new Array();
+	window.thisLogInd = inputLogStartInd;
+	window.pagesListed = new Array();
+	window.ipsListed = new Array();
 	runLogViewer();
 
 } else {
@@ -91,8 +96,8 @@ if(inputLogStartInd!=-1){
 
 
 function runLogViewer(){
-	setInterval(function(){
-		if(inputLogStartInd!=-1)
+	this.logViewerInterval = setInterval(function(){
+		if(inputLogStartInd!=-1 && typeof inputLog[thisLogInd] != "undefined")
 		if(inputLog[thisLogInd].time==thisSecond){
 			var entCount = 0;
 			while(inputLog[thisLogInd].time==thisSecond){
@@ -120,6 +125,7 @@ function runLogViewer(){
 					ipsListed.push(['ipAdd','ent'+entCount,'s'+thisSecond,inputLog[thisLogInd].ip]);
 					$(".phpPong.table #ips").append('<div class="ipAdd ent'+entCount+' uid'+uid+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].ip+'</div>'); // make ipsListed to handle duplicates
 				}
+				
 				/*
 				console.log($('.ipAdd.ent'+entCount+'#s'+thisSecond));*/
 				var ipAddTop,ipAddLeft;
@@ -174,18 +180,12 @@ function runLogViewer(){
 								if($(this).attr('class').split(" ")[2].substring(2)==ipsListed[i][3]){/*
 									ipAddTop = ($('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).offset().top - $(window).scrollTop());
 									ipAddLeft = ($('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).offset().left);*/
-									var numOfSameIp = 0;
-									for(var j = 0; j < ipsListed.length; j++){
-										if(ipsListed[j][3]==ipsListed[i][3])
-											numOfSameIp++;
-										if(numOfSameIp>1)
-											break;
-									}
+
 									console.log(ipsListed);
-									console.log("numOfSameIp: "+numOfSameIp);
-									if(numOfSameIp<=1)
+									if($('.ip'+ipsListed[i][3]).length>1){
 										$('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).fadeOut(700,function(){$(this).remove();});
-									ipsListed.splice(i,1);
+										ipsListed.splice(i,1);
+									}
 									break;
 								}
 							}
@@ -213,21 +213,23 @@ function runLogViewer(){
 				}
 				entCount++;
 				thisLogInd++;
-				if(inputLog.length<=thisLogInd){
+				if(inputLog.length<=thisLogInd && window.gettingLog == false){
 					getNewLog(endTime,Math.round((new Date()).getTime()/1000));
+					clearInterval(this);
 					break;
 				}
 			}
 		}
-		if(typeof inputLog[thisLogInd] != 'undefined' && (inputLog[thisLogInd].time<thisSecond || inputLog.length<=thisLogInd)){
+		if(typeof inputLog[thisLogInd] != 'undefined' && (inputLog[thisLogInd].time<thisSecond || inputLog.length<=thisLogInd) && window.gettingLog == false){
 			getNewLog(endTime,Math.round((new Date()).getTime()/1000));
+			clearInterval(this);
 		}
 
 		console.log("thisLogInd: "+thisLogInd+" inputLog.length: "+inputLog.length);
 
 
 
-		$(".phpPong.time").html(timeConverter(thisSecond));
+		$(".phpPong.time").html(timeConverter((thisSecond+2)));
 		thisSecond++;
 		console.log("thisNewSecond: "+thisSecond);
 	},1000);
@@ -248,32 +250,37 @@ function timeConverter(UNIX_timestamp){
      return time;
  }
 
+window.gettingLog = false;
 function getNewLog(start,end){
- 	$.post('serveLog.php',{'startTime':start,'endTime':end},function(data){
- 		if(data.substring(0,1)=="<"){getNewLog(start,end);return;}
- 		resData = JSON.parse(data);
- 		inputLog = resData[0];
- 		endTime = resData[1];
- 		startTime = resData[2];
- 		inputLogStartInd = -1;
- 		thisLogInd = 0;
- 		for(var i = 0; i < inputLog.length; i++){
-			if(inputLog[i].time >= thisSecond){
-				inputLogStartInd = thisLogInd = i;
-				//thisLogInd = i;
-				thisSecond = inputLog[i].time;
-				console.log("New log retrieved");
-				break;
+	console.log("No log data, waiting 10 seconds...");
+	window.gettingLog = true;
+	setTimeout(function(){
+	 	$.post('serveLog.php',{'startTime':start,'endTime':end},function(data){
+	 		if(data.substring(0,1)=="<"){getNewLog(start,end);return;}
+	 		resData = JSON.parse(data);
+	 		inputLog = resData[0];
+	 		
+	 		startTime = resData[2];
+	 		inputLogStartInd = -1;
+	 		thisLogInd = 0;
+	 		for(var i = 0; i < inputLog.length; i++){
+				if(inputLog[i].time >= thisSecond){
+					inputLogStartInd = thisLogInd = i;
+					//thisLogInd = i;
+					thisSecond = inputLog[i].time;
+					console.log("New log retrieved");
+					endTime = resData[1];
+					break;
+				}
+				//console.log(inputLog[i].time);
 			}
-			//console.log(inputLog[i].time);
-		}
-		if(inputLog.length == 0){
-			console.log("No log data, waiting 10 seconds...");
-			setTimeout(function(){
+			if(inputLog.length == 0){
+
 				getNewLog(endTime,Math.round((new Date()).getTime()/1000));
-			},10000);
-		}
- 	});
+			}
+			window.gettingLog = false;
+	 	});
+ 	},10000);
 }
 
 </script>

@@ -7,7 +7,7 @@ $logArr = runLogViewer();
 
 //print_r($logArr);
 
-$startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-60;//(5*24*60*60);
+$startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-12;//(5*24*60*60);
 $endTime = isset($_REQUEST['endTime'])?$_REQUEST['endTime']:time();
 
 
