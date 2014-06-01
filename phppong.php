@@ -99,7 +99,7 @@ function runLogViewer(){
 				var repeatPage = false;
 				var repeatIp = false;
 				var uid = Math.random();
-				console.log(pagesListed);
+				//console.log(pagesListed);
 				for(var i = 0; i < pagesListed.length; i++){
 					if(pagesListed[i][3]==inputLog[thisLogInd].file){
 						repeatPage = true;
@@ -154,7 +154,7 @@ function runLogViewer(){
 					},2000,
 					function(){
 						for(var i = 0; i < ipsListed.length; i++){
-							console.log("thisIp: "+ipsListed[i][3]+" circleIp: "+$(this).attr('class').split(" ")[2].substring(2));
+							//console.log("thisIp: "+ipsListed[i][3]+" circleIp: "+$(this).attr('class').split(" ")[2].substring(2));
 							if($(this).attr('class').split(" ")[2].substring(2)==ipsListed[i][3]){
 								ipAddTop = ($('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).offset().top - $(window).scrollTop())+5;
 								ipAddLeft = ($('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).offset().left);
@@ -162,7 +162,7 @@ function runLogViewer(){
 								break;
 							}
 						}
-						console.log("ipAddLeft: "+ipAddLeft);
+						//console.log("ipAddLeft: "+ipAddLeft);
 						$(this).animate({/*
 							'left':($('.ipAdd.'+$(this).attr('class').split(" ")[2]+'#'+$(this).attr('id')).offset().left),// Can modify this to make it more pong-like (bounce at inverted angle)
 							'top':($('.ipAdd.'+$(this).attr('class').split(" ")[2]+'#'+$(this).attr('id')).offset().top - $(window).scrollTop())+5*/
@@ -174,7 +174,17 @@ function runLogViewer(){
 								if($(this).attr('class').split(" ")[2].substring(2)==ipsListed[i][3]){/*
 									ipAddTop = ($('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).offset().top - $(window).scrollTop());
 									ipAddLeft = ($('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).offset().left);*/
-									$('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).fadeOut(700,function(){$(this).remove();});
+									var numOfSameIp = 0;
+									for(var j = 0; j < ipsListed.length; j++){
+										if(ipsListed[j][3]==ipsListed[i][3])
+											numOfSameIp++;
+										if(numOfSameIp>1)
+											break;
+									}
+									console.log(ipsListed);
+									console.log("numOfSameIp: "+numOfSameIp);
+									if(numOfSameIp<=1)
+										$('.ipAdd.'+ipsListed[i][1]+'#'+ipsListed[i][2]).fadeOut(700,function(){$(this).remove();});
 									ipsListed.splice(i,1);
 									break;
 								}
