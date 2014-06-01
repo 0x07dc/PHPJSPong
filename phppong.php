@@ -98,19 +98,41 @@ setInterval(function(){
 	if(inputLog[thisLogInd].time==thisSecond){
 		var entCount = 0;
 		while(inputLog[thisLogInd].time==thisSecond){
-			$(".phpPongTable #pages").append('<div class="pageName ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].file+'</div>'); // make pagesListed to handle duplicates
+			var repeatPage = false;
+			console.log(pagesListed);
+			for(var i = 0; i < pagesListed.length; i++){
+				
+				if(pagesListed[i][3]==inputLog[thisLogInd].file){
+					repeatPage = true;
+					break;
+				}
+			}
+			if(!repeatPage){
+				pagesListed.push(['pageName','ent'+entCount,'s'+thisSecond,inputLog[thisLogInd].file]);
+				$(".phpPongTable #pages").append('<div class="pageName ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].file+'</div>'); // make pagesListed to handle duplicates
+			}
 			$(".phpPongTable #ips").append('<div class="ipAdd ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].ip+'</div>'); // make ipsListed to handle duplicates
-			console.log($('.ipAdd.ent'+entCount+'#s'+thisSecond));
+			/*
+			console.log($('.ipAdd.ent'+entCount+'#s'+thisSecond));*/
 			var ipAddTop = ($('.ipAdd.ent'+entCount+'#s'+thisSecond).offset().top - $(window).scrollTop());
 			var ipAddLeft = ($('.ipAdd.ent'+entCount+'#s'+thisSecond).offset().left);
+
 			$("body").append(
 				'<div class="circle ent'+entCount+'" id="s'+thisSecond+'" \
 				style="position:absolute;\
 				top:'+ipAddTop+';\
 				left:'+ipAddLeft+';">0</div>');
-			console.log($('.pageName.ent'+entCount+'#s'+thisSecond).length);
-			var pageNameTop = ($('.pageName.ent'+entCount+'#s'+thisSecond).offset().top - $(window).scrollTop());
-			var pageNameLeft = ($('.pageName.ent'+entCount+'#s'+thisSecond).offset().left);
+			
+			//console.log($('.pageName.ent'+entCount+'#s'+thisSecond).length);
+			var pageNameTop,pageNameLeft;
+			if(!repeatPage){
+				pageNameTop = ($('.pageName.ent'+entCount+'#s'+thisSecond).offset().top - $(window).scrollTop());
+				pageNameLeft = ($('.pageName.ent'+entCount+'#s'+thisSecond).offset().left);
+			} else {
+				pageNameTop = ($('.pageName.'+pagesListed[i][1]+'#'+pagesListed[i][2]).offset().top - $(window).scrollTop());
+				pageNameLeft = ($('.pageName.'+pagesListed[i][1]+'#'+pagesListed[i][2]).offset().left);
+			}
+			
 			$('.circle.ent'+entCount+'#s'+thisSecond).animate({
 				'top':pageNameTop+'px',
 				'left':pageNameLeft+'px'
@@ -120,10 +142,11 @@ setInterval(function(){
 					'left':ipAddLeft,// Can modify this to make it more pong-like (bounce at inverted angle)
 					'top':ipAddTop
 				},2000,function(){
-					$(this).remove();
-					$('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')).remove();
-					console.log($(this).attr('class'));
-					console.log($('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')));
+					$(this).fadeOut(700);
+					$('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')).fadeOut(700);
+					//$('.'+$(this).attr('class').split(" ")[2]).remove();
+					//console.log($(this).attr('class'));
+					//console.log($('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')));
 				});
 			});
 			thisLogInd++;
