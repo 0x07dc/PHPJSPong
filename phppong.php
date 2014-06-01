@@ -27,14 +27,9 @@ for($i = 0; $i < count($logArrPre); $i++){
 }
 //print_r($logArr);
 
-$startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-(5*24*60*60);
+$startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-(.25*24*60*60);
 $endTime = isset($_REQUEST['endTime'])?$_REQUEST['endTime']:time()+1000;
 $jsLog = json_encode($logArr);
-
-//for()
-
-// Need time map for events
-
 
 
 ?>
@@ -42,33 +37,51 @@ $jsLog = json_encode($logArr);
 <head>
 	<title>PhpPong</title>
 	<style>
-	.phpPongTable {
+	body {
+		background-color: #000011;
+	}
+	.phpPong.table {
 		margin:auto;
 		height:90%;
 		width: 87%;
 		border:1px dotted black;
+		background-color: #00aa22;
 	}
-	.phpPongTable #ips {
+	.phpPong.table #ips {
 		width:20%;
 		height:100%;
 	}
-	.phpPongTable #pages {
+	.phpPong.table #pages {
 		width:20%;
 		height:100%;
+	}
+	.phpPong.time {
+		position: absolute;
+		font-size: 200%;
+		font-weight: bold;
+		font-family: "Courier New";
+		color:#eeddde;
+	}
+	.circle {
+		border-radius: 50%;
+		width:8px;
+		height:8px;
+		background-color: blue;
 	}
 	</style>
 	<script src="jquery-2.1.1.min.js"></script>
 </head>
 <body>
+	<div class='phpPong time'></div>
 
-	<table class='phpPongTable'>
+	<table class='phpPong table'>
 		<tr>
 			<td id='ips'></td><td id='innerMove'></td><td id='pages'></td>
 		</tr>
 	</table>
 
 <script>
-var inputLog = JSON.parse('<?php echo $jsLog ?>');
+inputLog = JSON.parse('<?php echo $jsLog ?>');
 var numOfPings = 0;
 
 
@@ -86,15 +99,9 @@ if(inputLogStartInd!=-1){
 
 
 
-var bncEnXCoord = '70%';
-var bncStXCoord = '70%';
 var thisLogInd = inputLogStartInd;
-console.log("thisLogInd: "+thisLogInd);
-console.log(inputLog[thisLogInd]);
 var pagesListed = new Array();
 setInterval(function(){
-	console.log(inputLog[thisLogInd].time);
-	console.log(thisSecond+"\n");
 	if(inputLog[thisLogInd].time==thisSecond){
 		var entCount = 0;
 		while(inputLog[thisLogInd].time==thisSecond){
@@ -109,9 +116,9 @@ setInterval(function(){
 			}
 			if(!repeatPage){
 				pagesListed.push(['pageName','ent'+entCount,'s'+thisSecond,inputLog[thisLogInd].file]);
-				$(".phpPongTable #pages").append('<div class="pageName ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].file+'</div>'); // make pagesListed to handle duplicates
+				$(".phpPong.table #pages").append('<div class="pageName ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].file+'</div>'); // make pagesListed to handle duplicates
 			}
-			$(".phpPongTable #ips").append('<div class="ipAdd ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].ip+'</div>'); // make ipsListed to handle duplicates
+			$(".phpPong.table #ips").append('<div class="ipAdd ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].ip+'</div>'); // make ipsListed to handle duplicates
 			/*
 			console.log($('.ipAdd.ent'+entCount+'#s'+thisSecond));*/
 			var ipAddTop = ($('.ipAdd.ent'+entCount+'#s'+thisSecond).offset().top - $(window).scrollTop());
@@ -121,7 +128,7 @@ setInterval(function(){
 				'<div class="circle ent'+entCount+'" id="s'+thisSecond+'" \
 				style="position:absolute;\
 				top:'+ipAddTop+';\
-				left:'+ipAddLeft+';">0</div>');
+				left:'+ipAddLeft+';"></div>');
 			
 			//console.log($('.pageName.ent'+entCount+'#s'+thisSecond).length);
 			var pageNameTop,pageNameLeft;
@@ -144,13 +151,14 @@ setInterval(function(){
 				},2000,function(){
 					$(this).fadeOut(700);
 					$('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')).fadeOut(700);
-					//$('.'+$(this).attr('class').split(" ")[2]).remove();
-					//console.log($(this).attr('class'));
-					//console.log($('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')));
 				});
 			});
-			thisLogInd++;
 			entCount++;
+			thisLogInd++;
+			if(inputLog.length<=thisLogInd){
+				getNewLog(endTime,((new Date()).getTime())+1000);
+				break;
+			}
 		}
 	}
 
@@ -159,16 +167,42 @@ setInterval(function(){
 
 
 
-
+	$(".phpPong.time").html(timeConverter(thisSecond));
 	thisSecond++;
 	console.log("thisNewSecond: "+thisSecond);
 },1000);
 
 } else {
-	console.log("No log entries");
+	console.log("No log entries, waiting 2 minutes");
 }
+//http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
+function timeConverter(UNIX_timestamp){
+ var a = new Date(UNIX_timestamp*1000);
+ var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+     var year = a.getFullYear();
+     var month = months[a.getMonth()];
+     var date = a.getDate();
+     var hour = a.getHours();
+     var min = a.getMinutes();
+     var sec = a.getSeconds();
+     var time = date+','+month+' '+year+' '+hour+':'+min+':'+sec ;
+     return time;
+ }
 
-
+ function getNewLog(start,end){
+ 	$.post('serveLog.php',{'startTime':start,'endTime':end},function(data){
+ 		inputLog = JSON.parse('<?php echo $jsLog ?>');
+ 		thisLogInd = 0;
+ 		for(var i = 0; i < inputLog.length; i++){
+			if(inputLog[i].time >= thisSecond){
+				inputLogStartInd = thisLogInd = i;
+				//thisLogInd = i;
+				thisSecond = inputLog[i].time;
+				break;
+			}
+		}
+ 	});
+ }
 
 </script>
 
