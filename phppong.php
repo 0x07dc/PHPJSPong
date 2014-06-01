@@ -98,27 +98,32 @@ setInterval(function(){
 	if(inputLog[thisLogInd].time==thisSecond){
 		var entCount = 0;
 		while(inputLog[thisLogInd].time==thisSecond){
-			$(".phpPongTable #pages").append('<div class="pageName ent'+entCount+'" id="'+thisSecond+'">'+inputLog[thisLogInd].file+'</div>'); // make pagesListed to handle duplicates
-			$(".phpPongTable #ips").append('<div class="ipAdd ent'+entCount+'" id="'+thisSecond+'">'+inputLog[thisLogInd].ip+'</div>'); // make ipsListed to handle duplicates
-			console.log($('.ipAdd.ent'+entCount+'#'+thisSecond));
-			var ipAddTop = ($('.ipAdd.ent'+entCount+'#'+thisSecond).offset().top - $(window).scrollTop());
-			var ipAddLeft = ($('.ipAdd.ent'+entCount+'#'+thisSecond).offset().left);
+			$(".phpPongTable #pages").append('<div class="pageName ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].file+'</div>'); // make pagesListed to handle duplicates
+			$(".phpPongTable #ips").append('<div class="ipAdd ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].ip+'</div>'); // make ipsListed to handle duplicates
+			console.log($('.ipAdd.ent'+entCount+'#s'+thisSecond));
+			var ipAddTop = ($('.ipAdd.ent'+entCount+'#s'+thisSecond).offset().top - $(window).scrollTop());
+			var ipAddLeft = ($('.ipAdd.ent'+entCount+'#s'+thisSecond).offset().left);
 			$("body").append(
-				'<div class=".circle ent'+entCount+'" id="'+thisSecond+'" \
+				'<div class="circle ent'+entCount+'" id="s'+thisSecond+'" \
 				style="position:absolute;\
 				top:'+ipAddTop+';\
 				left:'+ipAddLeft+';">0</div>');
-			console.log($('.pageName.ent'+entCount+'#'+thisSecond).length);
-			var pageNameTop = ($('.pageName.ent'+entCount+'#'+thisSecond).offset().top - $(window).scrollTop());
-			var pageNameLeft = ($('.pageName.ent'+entCount+'#'+thisSecond).offset().left);
-			$('.circle.ent'+entCount+'#'+thisSecond).animate({
-				'top':pageNameTop,
-				'left':pageNameLeft
+			console.log($('.pageName.ent'+entCount+'#s'+thisSecond).length);
+			var pageNameTop = ($('.pageName.ent'+entCount+'#s'+thisSecond).offset().top - $(window).scrollTop());
+			var pageNameLeft = ($('.pageName.ent'+entCount+'#s'+thisSecond).offset().left);
+			$('.circle.ent'+entCount+'#s'+thisSecond).animate({
+				'top':pageNameTop+'px',
+				'left':pageNameLeft+'px'
 			},2000,
 			function(){
 				$(this).animate({
 					'left':ipAddLeft,// Can modify this to make it more pong-like (bounce at inverted angle)
 					'top':ipAddTop
+				},2000,function(){
+					$(this).remove();
+					$('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')).remove();
+					console.log($(this).attr('class'));
+					console.log($('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')));
 				});
 			});
 			thisLogInd++;
