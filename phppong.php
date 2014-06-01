@@ -27,8 +27,8 @@ for($i = 0; $i < count($logArrPre); $i++){
 }
 //print_r($logArr);
 
-$startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-(.25*24*60*60);
-$endTime = isset($_REQUEST['endTime'])?$_REQUEST['endTime']:time()+1000;
+$startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-(1*60);//(.25*24*60*60);
+$endTime = isset($_REQUEST['endTime'])?$_REQUEST['endTime']:time();
 $jsLog = json_encode($logArr);
 
 
@@ -88,6 +88,7 @@ var numOfPings = 0;
 
 var inputLogStartInd = -1;
 var thisSecond = '<?php echo $startTime ?>';
+var endTime = '<?php echo $endTime ?>';
 for(var i = 0; i < inputLog.length; i++){
 	if(inputLog[i].time >= thisSecond){
 		inputLogStartInd = i;
@@ -97,84 +98,96 @@ for(var i = 0; i < inputLog.length; i++){
 }
 if(inputLogStartInd!=-1){
 
+	var thisLogInd = inputLogStartInd;
+	var pagesListed = new Array();
+	runLogViewer();
+
+} else {
+	runLogViewer();
+	console.log("No log entries, waiting 10 seconds");
+	setTimeout(function(){
+		getNewLog(getNewLog(endTime,((new Date()).getTime())+1000));
+	},10000)
+}
 
 
-var thisLogInd = inputLogStartInd;
-var pagesListed = new Array();
-setInterval(function(){
-	if(inputLog[thisLogInd].time==thisSecond){
-		var entCount = 0;
-		while(inputLog[thisLogInd].time==thisSecond){
-			var repeatPage = false;
-			console.log(pagesListed);
-			for(var i = 0; i < pagesListed.length; i++){
+function runLogViewer(){
+	setInterval(function(){
+		if(inputLogStartInd!=-1)
+		if(inputLog[thisLogInd].time==thisSecond){
+			var entCount = 0;
+			while(inputLog[thisLogInd].time==thisSecond){
+				var repeatPage = false;
+				console.log(pagesListed);
+				for(var i = 0; i < pagesListed.length; i++){
+					
+					if(pagesListed[i][3]==inputLog[thisLogInd].file){
+						repeatPage = true;
+						break;
+					}
+				}
+				if(!repeatPage){
+					pagesListed.push(['pageName','ent'+entCount,'s'+thisSecond,inputLog[thisLogInd].file]);
+					$(".phpPong.table #pages").append('<div class="pageName ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].file+'</div>'); // make pagesListed to handle duplicates
+				}
+				$(".phpPong.table #ips").append('<div class="ipAdd ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].ip+'</div>'); // make ipsListed to handle duplicates
+				/*
+				console.log($('.ipAdd.ent'+entCount+'#s'+thisSecond));*/
+				var ipAddTop = ($('.ipAdd.ent'+entCount+'#s'+thisSecond).offset().top - $(window).scrollTop());
+				var ipAddLeft = ($('.ipAdd.ent'+entCount+'#s'+thisSecond).offset().left);
+
+				$("body").append(
+					'<div class="circle ent'+entCount+'" id="s'+thisSecond+'" \
+					style="position:absolute;\
+					top:'+ipAddTop+';\
+					left:'+ipAddLeft+';"></div>');
 				
-				if(pagesListed[i][3]==inputLog[thisLogInd].file){
-					repeatPage = true;
+				//console.log($('.pageName.ent'+entCount+'#s'+thisSecond).length);
+				var pageNameTop,pageNameLeft;
+				if(!repeatPage){
+					pageNameTop = ($('.pageName.ent'+entCount+'#s'+thisSecond).offset().top - $(window).scrollTop())+5;
+					pageNameLeft = ($('.pageName.ent'+entCount+'#s'+thisSecond).offset().left);
+				} else {
+					pageNameTop = ($('.pageName.'+pagesListed[i][1]+'#'+pagesListed[i][2]).offset().top - $(window).scrollTop())+5;
+					pageNameLeft = ($('.pageName.'+pagesListed[i][1]+'#'+pagesListed[i][2]).offset().left);
+				}
+				
+				$('.circle.ent'+entCount+'#s'+thisSecond).animate({
+					'top':pageNameTop+'px',
+					'left':pageNameLeft+'px'
+				},2000,
+				function(){
+					$(this).animate({
+						'left':($('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')).offset().left),// Can modify this to make it more pong-like (bounce at inverted angle)
+						'top':($('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')).offset().top - $(window).scrollTop())+5
+					},2000,function(){
+						$(this).fadeOut(700);
+						$('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')).fadeOut(700);
+					});
+				});
+				entCount++;
+				thisLogInd++;
+				if(inputLog.length<=thisLogInd){
+					getNewLog(endTime,((new Date()).getTime()/1000)+1000);
 					break;
 				}
 			}
-			if(!repeatPage){
-				pagesListed.push(['pageName','ent'+entCount,'s'+thisSecond,inputLog[thisLogInd].file]);
-				$(".phpPong.table #pages").append('<div class="pageName ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].file+'</div>'); // make pagesListed to handle duplicates
-			}
-			$(".phpPong.table #ips").append('<div class="ipAdd ent'+entCount+'" id="s'+thisSecond+'">'+inputLog[thisLogInd].ip+'</div>'); // make ipsListed to handle duplicates
-			/*
-			console.log($('.ipAdd.ent'+entCount+'#s'+thisSecond));*/
-			var ipAddTop = ($('.ipAdd.ent'+entCount+'#s'+thisSecond).offset().top - $(window).scrollTop());
-			var ipAddLeft = ($('.ipAdd.ent'+entCount+'#s'+thisSecond).offset().left);
-
-			$("body").append(
-				'<div class="circle ent'+entCount+'" id="s'+thisSecond+'" \
-				style="position:absolute;\
-				top:'+ipAddTop+';\
-				left:'+ipAddLeft+';"></div>');
-			
-			//console.log($('.pageName.ent'+entCount+'#s'+thisSecond).length);
-			var pageNameTop,pageNameLeft;
-			if(!repeatPage){
-				pageNameTop = ($('.pageName.ent'+entCount+'#s'+thisSecond).offset().top - $(window).scrollTop());
-				pageNameLeft = ($('.pageName.ent'+entCount+'#s'+thisSecond).offset().left);
-			} else {
-				pageNameTop = ($('.pageName.'+pagesListed[i][1]+'#'+pagesListed[i][2]).offset().top - $(window).scrollTop());
-				pageNameLeft = ($('.pageName.'+pagesListed[i][1]+'#'+pagesListed[i][2]).offset().left);
-			}
-			
-			$('.circle.ent'+entCount+'#s'+thisSecond).animate({
-				'top':pageNameTop+'px',
-				'left':pageNameLeft+'px'
-			},2000,
-			function(){
-				$(this).animate({
-					'left':ipAddLeft,// Can modify this to make it more pong-like (bounce at inverted angle)
-					'top':ipAddTop
-				},2000,function(){
-					$(this).fadeOut(700);
-					$('.ipAdd.'+$(this).attr('class').split(" ")[1]+'#'+$(this).attr('id')).fadeOut(700);
-				});
-			});
-			entCount++;
-			thisLogInd++;
-			if(inputLog.length<=thisLogInd){
-				getNewLog(endTime,((new Date()).getTime())+1000);
-				break;
-			}
 		}
-	}
+		if(inputLog.length<=thisLogInd){
+			getNewLog(endTime,((new Date()).getTime()/1000)+1000);
+		}
+
+		
 
 
-	
 
-
-
-	$(".phpPong.time").html(timeConverter(thisSecond));
-	thisSecond++;
-	console.log("thisNewSecond: "+thisSecond);
-},1000);
-
-} else {
-	console.log("No log entries, waiting 2 minutes");
+		$(".phpPong.time").html(timeConverter(thisSecond));
+		thisSecond++;
+		console.log("thisNewSecond: "+thisSecond);
+	},1000);
 }
+
+
 //http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
 function timeConverter(UNIX_timestamp){
  var a = new Date(UNIX_timestamp*1000);
@@ -198,8 +211,15 @@ function timeConverter(UNIX_timestamp){
 				inputLogStartInd = thisLogInd = i;
 				//thisLogInd = i;
 				thisSecond = inputLog[i].time;
+				console.log("New log retrieved");
 				break;
 			}
+		}
+		if(inputLog.length == 0){
+			console.log("No log data, waiting 10 seconds...");
+			setTimeout(function(){
+				getNewLog(endTime,(new Date()).getTime()/1000);
+			},10000);
 		}
  	});
  }

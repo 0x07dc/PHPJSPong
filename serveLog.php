@@ -25,10 +25,25 @@ for($i = 0; $i < count($logArrPre); $i++){
 	$logArr[] = $newRow;
 
 }
+
+
+
 //print_r($logArr);
 
-$startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-(5*24*60*60);
+$startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-60;//(5*24*60*60);
 $endTime = isset($_REQUEST['endTime'])?$_REQUEST['endTime']:time()+1000;
+
+
+// Clean up old entries or new ones (out of schedule range)
+$tempLogArr = $logArr;
+$logArr = array();
+for($i = 0; $i < count($tempLogArr); $i++){
+	if($tempLogArr[$i]['time']>$startTime && $tempLogArr[$i]['time']<$endTime){
+		$logArr[] = $tempLogArr[$i];
+	}
+}
+
+
 $jsLog = json_encode($logArr);
 
 echo $jsLog;
