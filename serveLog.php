@@ -1,52 +1,32 @@
 <?php
 
-date_default_timezone_set('AMERICA/NEW_YORK');
-$log = file_get_contents('/usr/local/apache/logs/access_log');
-$logArrPre = explode("\n",$log);
-$logArr = array();
-for($i = 0; $i < count($logArrPre); $i++){
-	preg_match('/^[^\s]*/', $logArrPre[$i], $newIp);
-	$newIp = $newIp[0];
-	preg_match('/\[(.*)\]/', $logArrPre[$i], $newTime);
-	$newTime = $newTime[1];
-	preg_match('/"(.*)"/', $logArrPre[$i], $pageNType);
-	$pageNType = $pageNType[1];
-	preg_match('/([^\s]*)\s([^\s]*)\s(.*)/', $pageNType, $newPageNType);
-	$newType = $newPageNType[1];
-	$newPage = $newPageNType[2];
-	$newProt = $newPageNType[3];
-	$newRow = array(
-		"ip"=>$newIp,
-		"time"=>strtotime($newTime),
-		"file"=>$newPage,
-		"reqType"=>$newType,
-		"reqProt"=>$newProt,
-		);
-	$logArr[] = $newRow;
-
-}
+require('php.php');
+$logArr = runLogViewer();
 
 
 
 //print_r($logArr);
 
 $startTime = isset($_REQUEST['startTime'])?$_REQUEST['startTime']:time()-60;//(5*24*60*60);
-$endTime = isset($_REQUEST['endTime'])?$_REQUEST['endTime']:time()+1000;
+$endTime = isset($_REQUEST['endTime'])?$_REQUEST['endTime']:time();
 
 
 // Clean up old entries or new ones (out of schedule range)
 $tempLogArr = $logArr;
 $logArr = array();
+//echo $startTime;
 for($i = 0; $i < count($tempLogArr); $i++){
-	if($tempLogArr[$i]['time']>$startTime && $tempLogArr[$i]['time']<$endTime){
+	if(($tempLogArr[$i]['time']>=$startTime) && ($tempLogArr[$i]['time']<=$endTime)){
 		$logArr[] = $tempLogArr[$i];
 	}
+	//print_r($tempLogArr[$i])."\n";
 }
 
 
-$jsLog = json_encode($logArr);
+$jsLog = json_encode(array($logArr,$endTime,$startTime));
 
 echo $jsLog;
+
 
 
 
